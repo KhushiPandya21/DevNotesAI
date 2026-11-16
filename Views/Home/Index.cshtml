@@ -1,0 +1,328 @@
+﻿ @{
+    ViewData["Title"] = "DevNotes AI";
+}
+
+<div class="workspace-page">
+
+    <div class="text-center mb-3">
+        <h1 class="fw-bold mb-1">DevNotes AI</h1>
+        <p class="lead mb-1">Your AI-powered coding companion</p>
+        <p class="text-muted mb-0">
+            Understand code, analyze functions, and generate documentation in one place.
+        </p>
+    </div>
+
+
+    <div class="workspace-panel">
+        <h3 class="mb-3">Analyze Your Code</h3>
+
+        <label for="languageSelect" class="form-label">Programming Language</label>
+
+<select id="languageSelect" class="form-select mb-3">
+    <option value="C#">C#</option>
+    <option value="Java">Java</option>
+    <option value="Python">Python</option>
+</select>
+
+
+        <label for="codeFile" class="form-label">Upload a source-code file</label>
+        <input type="file"
+               id="codeFile"
+               class="form-control mb-2"
+               accept=".cs,.java,.py">
+
+        <div class="form-text mb-3">
+            Supported files: C#, Java, and Python (.cs, .java, .py)
+        </div>
+
+        <label for="codeInput" class="form-label">Or paste/edit your source code</label>
+
+        <textarea id="codeInput"
+                  class="form-control mb-3"
+                  rows="1"
+                  placeholder="Start typing or paste your code here..."></textarea>
+
+
+
+        <div class="d-flex flex-wrap gap-2">
+           <button type="button"
+        class="btn btn-primary"
+        onclick="explainCode()">
+    Explain Code
+</button>
+
+           
+            <button type="button"
+                    class="btn btn-outline-primary"
+                    onclick="analyzeFunctions()">
+                Analyze Functions
+            </button>
+
+
+            
+            <button type="button"
+                    class="btn btn-outline-success"
+                    onclick="generateDocumentation()">
+                Generate Documentation
+            </button>
+
+        </div>
+
+        <div class="mt-4">
+            <h5>Analysis Results</h5>
+            <div class="border rounded p-3 text-muted" id="resultArea">
+                Your results will appear here.
+            </div>
+            <hr class="my-4" />
+
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    const codeInput = document.getElementById("codeInput");
+
+    function adjustCodeArea() {
+    codeInput.style.height = "44px";
+
+    if (codeInput.value.trim() !== "") {
+    codeInput.style.height = "auto";
+    codeInput.style.height = codeInput.scrollHeight + "px";
+    }
+    }
+
+    codeInput.addEventListener("input", adjustCodeArea);
+
+    // Also resize after a file is loaded into the editor
+    codeInput.addEventListener("change", adjustCodeArea);
+
+
+    document.getElementById("codeFile").addEventListener("change", function () {
+    const file = this.files[0];
+    const codeInput = document.getElementById("codeInput");
+    const languageSelect = document.getElementById("languageSelect");
+    const result = document.getElementById("resultArea");
+
+    if (!file) {
+    return;
+    }
+
+    const extension = file.name.split(".").pop().toLowerCase();
+
+    const languageMap = {
+    "cs": "C#",
+    "java": "Java",
+    "py": "Python"
+    };
+
+    if (!languageMap[extension]) {
+    result.innerText = "Please select a .cs, .java, or .py file.";
+    this.value = "";
+    return;
+    }
+
+    const reader = new FileReader();
+
+   
+    reader.onload = function (event) {
+    codeInput.value = event.target.result;
+    languageSelect.value = languageMap[extension];
+
+    adjustCodeArea();
+
+    result.innerText = "File loaded successfully: " + file.name;
+    };
+
+
+    reader.onerror = function () {
+    result.innerText = "Unable to read this file. Please try another one.";
+    };
+
+    reader.readAsText(file);
+    });
+
+
+    async function explainCode() {
+        const code = document.getElementById("codeInput").value;
+        const language = document.getElementById("languageSelect").value;
+        const result = document.getElementById("resultArea");
+
+        if (code.trim() === "") {
+            result.innerText = "Please paste your code first.";
+            return;
+        }
+
+        result.innerText = "Sending code to the server...";
+
+        try {
+            const response = await fetch("/Home/ExplainCode", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    code: code,
+                    language: language
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Request failed.");
+            }
+
+            result.innerHTML = DOMPurify.sanitize(marked.parse(data.message));
+        } catch (error) {
+            result.innerText = "Error: " + error.message;
+        }
+    }
+    async function analyzeFunctions() {
+        const code = document.getElementById("codeInput").value;
+        const language = document.getElementById("languageSelect").value;
+        const result = document.getElementById("resultArea");
+
+        if (code.trim() === "") {
+            result.innerText = "Please paste your code first.";
+            return;
+        }
+
+        result.innerText = "Analyzing functions with Gemini...";
+
+        try {
+            const response = await fetch("/Home/AnalyzeFunctions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    code: code,
+                    language: language
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Request failed.");
+            }
+
+            result.innerHTML = DOMPurify.sanitize(marked.parse(data.message));
+        } catch (error) {
+            result.innerText = "Error: " + error.message;
+        }
+    }
+    async function generateDocumentation() {
+        const code = document.getElementById("codeInput").value;
+        const language = document.getElementById("languageSelect").value;
+        const result = document.getElementById("resultArea");
+
+        if (code.trim() === "") {
+            result.innerText = "Please paste your code first.";
+            return;
+        }
+
+        result.innerText = "Generating documentation with Gemini...";
+
+        try {
+            const response = await fetch("/Home/GenerateDocumentation", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    code: code,
+                    language: language
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Request failed.");
+            }
+
+            result.innerHTML = DOMPurify.sanitize(marked.parse(data.message));
+        } catch (error) {
+            result.innerText = "Error: " + error.message;
+        }
+    }
+
+    async function loadAnalysisHistory() {
+    const historyArea = document.getElementById("historyArea");
+
+    historyArea.innerHTML =
+    '<p class="text-muted">Loading history...</p>';
+
+    try {
+    const response = await fetch("/Home/GetAnalysisHistory");
+
+    if (!response.ok) {
+    throw new Error("Unable to load history.");
+    }
+
+    const history = await response.json();
+
+    if (history.length === 0) {
+    historyArea.innerHTML =
+    '<p class="text-muted">No saved analyses yet.</p>';
+    return;
+    }
+
+    historyArea.innerHTML = "";
+
+    history.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "card mb-3";
+
+    const body = document.createElement("div");
+    body.className = "card-body";
+
+    const heading = document.createElement("h5");
+    heading.className = "card-title";
+    heading.textContent = item.analysisType;
+
+    const details = document.createElement("p");
+    details.className = "text-muted small";
+    details.textContent =
+    item.language + " | " +
+    new Date(item.createdAt).toLocaleString();
+
+    const codeHeading = document.createElement("h6");
+    codeHeading.textContent = "Source Code";
+
+    const code = document.createElement("pre");
+    code.className = "bg-light p-3 rounded";
+    code.style.overflowX = "auto";
+    code.textContent = item.sourceCode;
+
+    const resultHeading = document.createElement("h6");
+    resultHeading.textContent = "AI Result";
+
+    const result = document.createElement("div");
+    result.innerHTML = DOMPurify.sanitize(
+    marked.parse(item.result || "")
+    );
+
+    body.append(
+    heading,
+    details,
+    codeHeading,
+    code,
+    resultHeading,
+    result
+    );
+
+    card.appendChild(body);
+    historyArea.appendChild(card);
+    });
+    } catch (error) {
+    historyArea.textContent =
+    "Unable to load history. Please try again.";
+    }
+    }
+
+</script>

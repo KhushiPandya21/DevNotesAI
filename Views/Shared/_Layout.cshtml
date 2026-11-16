@@ -1,0 +1,132 @@
+﻿
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - DevNotes AI</title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/DevNotesAI.styles.css"
+          asp-append-version="true" />
+</head>
+
+<body>
+    <div class="app-shell">
+
+        <aside class="app-sidebar">
+            <a class="brand-link"
+               asp-controller="Home"
+               asp-action="Index">
+                <span class="brand-icon">&lt;/&gt;</span>
+                <span>DevNotes <span class="brand-accent">AI</span></span>
+            </a>
+
+            <div class="sidebar-label">WORKSPACE</div>
+
+            <nav class="sidebar-nav">
+
+                <a class="sidebar-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")"
+                   asp-controller="Home"
+                   asp-action="Index">
+                    <span class="nav-icon">⌘</span>
+                    <span>Code Workspace</span>
+                </a>
+
+
+                
+                
+                <a class="sidebar-link @(ViewContext.RouteData.Values["action"]?.ToString() == "History" ? "active" : "")"
+                   asp-controller="Home"
+                   asp-action="History">
+                    <span class="nav-icon">◷</span>
+                    <span>Analysis History</span>
+                </a>
+
+
+                <a class="sidebar-link"
+                   asp-controller="Home"
+                   asp-action="Privacy">
+                    <span class="nav-icon">⚙</span>
+                    <span>Privacy</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-status"></div>
+                <div>
+                    <div class="status-title">AI Workspace</div>
+                    <div class="status-subtitle">Your coding companion</div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="topbar">
+                <div>
+                    <div class="topbar-eyebrow">DEVELOPER TOOLKIT</div>
+                    <div class="topbar-title">DevNotes AI</div>
+                </div>
+
+                <button type="button"
+                        class="theme-toggle"
+                        id="themeToggle"
+                        aria-label="Switch color theme">
+                    <span id="themeIcon">☀</span>
+                    <span id="themeText">Light mode</span>
+                </button>
+            </header>
+
+            <main role="main" class="main-content">
+                @RenderBody()
+            </main>
+
+            <footer class="app-footer">
+                <span>© 2026 DevNotes AI</span>
+                <span>Built for developers, powered by AI.</span>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        const themeToggle = document.getElementById("themeToggle");
+        const themeIcon = document.getElementById("themeIcon");
+        const themeText = document.getElementById("themeText");
+
+        function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+
+        const isDark = theme === "dark";
+        themeIcon.textContent = isDark ? "☀" : "☾";
+        themeText.textContent = isDark ? "Light mode" : "Dark mode";
+        }
+
+        const savedTheme = localStorage.getItem("devnotes-theme") || "dark";
+        applyTheme(savedTheme);
+
+        themeToggle.addEventListener("click", function () {
+        const currentTheme =
+        document.documentElement.getAttribute("data-theme");
+
+        const nextTheme = currentTheme === "dark" ? "light" : "dark";
+
+        localStorage.setItem("devnotes-theme", nextTheme);
+        applyTheme(nextTheme);
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

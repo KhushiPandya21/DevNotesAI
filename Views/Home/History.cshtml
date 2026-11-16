@@ -1,0 +1,113 @@
+﻿@{
+    ViewData["Title"] = "Analysis History";
+}
+
+<div class="workspace-page">
+    <div class="workspace-panel">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+            <div>
+                <h1 class="fw-bold mb-1">Analysis History</h1>
+                <p class="text-muted mb-0">
+                    View your previously saved AI code analyses.
+                </p>
+            </div>
+
+            <button type="button"
+                    class="btn btn-outline-primary"
+                    onclick="loadAnalysisHistory()">
+                Refresh History
+            </button>
+        </div>
+
+        <div id="historyArea">
+            <p class="text-muted">Loading your saved analyses...</p>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+    async function loadAnalysisHistory() {
+    const historyArea = document.getElementById("historyArea");
+
+    historyArea.innerHTML =
+    '<p class="text-muted">Loading history...</p>';
+
+    try {
+    const response = await fetch("/Home/GetAnalysisHistory");
+
+    if (!response.ok) {
+    throw new Error("Unable to load history.");
+    }
+
+    const history = await response.json();
+
+    if (history.length === 0) {
+    historyArea.innerHTML =
+    '<p class="text-muted">No saved analyses yet.</p>';
+    return;
+    }
+
+    historyArea.innerHTML = "";
+
+    history.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "card mb-3";
+
+    const body = document.createElement("div");
+    body.className = "card-body";
+
+    const heading = document.createElement("h5");
+    heading.className = "card-title";
+    heading.textContent = item.analysisType;
+
+    const details = document.createElement("p");
+    details.className = "text-muted small";
+    details.textContent =
+    item.language + " | " +
+    new Date(item.createdAt).toLocaleString();
+
+    const codeHeading = document.createElement("h6");
+    codeHeading.textContent = "Source Code";
+
+    const code = document.createElement("pre");
+    code.className = "bg-light p-3 rounded";
+    code.style.overflowX = "auto";
+    code.style.whiteSpace = "pre-wrap";
+    code.style.overflowWrap = "anywhere";
+    code.textContent = item.sourceCode;
+
+    const resultHeading = document.createElement("h6");
+    resultHeading.className = "mt-3";
+    resultHeading.textContent = "AI Result";
+
+    const result = document.createElement("div");
+    result.innerHTML = DOMPurify.sanitize(
+    marked.parse(item.result || "")
+    );
+
+    body.append(
+    heading,
+    details,
+    codeHeading,
+    code,
+    resultHeading,
+    result
+    );
+
+    card.appendChild(body);
+    historyArea.appendChild(card);
+    });
+
+    } catch (error) {
+    historyArea.textContent =
+    "Unable to load history. Please try again.";
+    }
+    }
+
+    loadAnalysisHistory();
+</script>
